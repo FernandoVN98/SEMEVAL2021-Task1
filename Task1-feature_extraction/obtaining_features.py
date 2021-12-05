@@ -6,6 +6,46 @@ from nltk.corpus import wordnet
 import spacy
 nlp = spacy.load("en_core_web_sm")
 from nltk import pos_tag
+def total_number_of_hyperonyms(token):
+    '''
+    :param token: expression to be evaluated
+    :return: number of hyperonyms obtained from all the definitions of the token in wordnet
+    '''
+    definitions = wordnet.synsets(token)
+    number_of_hypernyms = 0
+    for definit in definitions:
+        number_of_hypernyms = number_of_hypernyms + len(definit.hypernyms())
+    return number_of_hypernyms
+def obtain_number_hyperonyms_first_def(token):
+    '''
+    :param token: expression to be evaluated
+    :return: number of hyperonyms obtained from the first definition of the token in wordnet
+    '''
+    if len(wordnet.synsets(token)) >= 1:
+        first_def = wordnet.synsets(token)[0]
+        return len(first_def.hypernyms())
+    else:
+        return 0
+def total_number_of_hyponyms(token):
+    '''
+    :param token: expression to be evaluated
+    :return: number of hyponyms obtained from all the definitions of the token in wordnet
+    '''
+    definitions = wordnet.synsets(token)
+    number_of_hyponyms = 0
+    for definit in definitions:
+        number_of_hyponyms = number_of_hyponyms + len(definit.hyponyms())
+    return number_of_hyponyms
+def obtain_number_hyponyms_first_def(token):
+    '''
+    :param token: expression to be evaluated
+    :return: number of hyponyms obtained from the first definition of the token in wordnet
+    '''
+    if len(wordnet.synsets(token)) >= 1:
+        first_def = wordnet.synsets(token)[0]
+        return len(first_def.hyponyms())
+    else:
+        return 0
 def obtain_number_synsets(token):
     '''
     :param token: expression to be evaluated
@@ -100,7 +140,16 @@ def obtain_features(path_to_file, file_to_save):
         features.append(obtain_subject_object(row[2],row[3]))
         #analyze if the sentence has subject, direct object and indirect object
         features.append(obtain_subject_iobject_dobject(row[2]))#Está en el _2 de las features
+        #obtain number of synsets in wordnet of the token
         features.append(obtain_number_synsets(row[3]))#Está en el _3 de las features
+        #obtain number of hyponyms from the first definition of the token in wordnet
+        features.append(obtain_number_hyponyms_first_def(row[3]))#Está en el _4 de las features
+        #obtain number of hyponyms of all the definitions of the token in wordnet
+        features.append(total_number_of_hyponyms(row[3]))#Está en el _4 de las features
+        # obtain number of hyperonyms from the first definition of the token in wordnet
+        features.append(obtain_number_hyperonyms_first_def(row[3]))  # Está en el _5 de las features
+        # obtain number of hyperonyms of all the definitions of the token in wordnet
+        features.append(total_number_of_hyperonyms(row[3]))  # Está en el _5 de las features
         #obtain frequency of occurrence of the token
         if row[3] in dictionary_frequency_words.keys():
             features.append(int(dictionary_frequency_words[row[3]]))
@@ -112,7 +161,5 @@ def obtain_features(path_to_file, file_to_save):
     x_train = x_train[1:]
     np.savetxt(file_to_save+".txt", x_train, fmt='%d')
     np.savetxt(file_to_save+"_target.txt", y_train, fmt='%.20f')
-    print(x_train)
-    print(y_train)
     return x_train, y_train
-obtain_features("lcp_single_test.tsv", "test_features_3")
+obtain_features("lcp_single_test.tsv", "test_features_5")
