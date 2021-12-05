@@ -2,10 +2,36 @@ import csv
 import pickle
 
 import numpy as np
-import nltk
+from nltk.corpus import wordnet
 import spacy
 nlp = spacy.load("en_core_web_sm")
 from nltk import pos_tag
+def obtain_number_synsets(token):
+    '''
+    :param token: expression to be evaluated
+    :return: number of synsets obtained from wordnet with the token
+    '''
+    return len(wordnet.synsets(token))
+def obtain_subject_iobject_dobject(text):
+    '''
+    :param text: context sentence to analyze, it contains the token
+    :return: 0 if the expression is the subject of the sentence
+            1 if the expression is the indirect object of the sentence
+            2 if the expression is the direct object of the sentence
+            3 is the default returning value
+    '''
+    parsed_text = nlp(text)
+    flag_subject = 0
+    flag_iobject = 0
+    flag_dobject = 0
+    for text in parsed_text:
+        if text.dep_ == "nsubj":
+            flag_subject = 1
+        if text.dep_ == "iobj":
+            flag_iobject = 1
+        if text.dep_ == "dobj":
+            flag_dobject = 1
+    return flag_subject + (flag_iobject * 2) + (flag_dobject * 3)
 def obtain_subject_object(text, token):
     '''
     :param text: context sentence to analyze, it contains the token
@@ -72,6 +98,9 @@ def obtain_features(path_to_file, file_to_save):
         features.append(syllable_count(row[3]))
         #analyze if the token is subject or object
         features.append(obtain_subject_object(row[2],row[3]))
+        #analyze if the sentence has subject, direct object and indirect object
+        features.append(obtain_subject_iobject_dobject(row[2]))#Está en el _2 de las features
+        features.append(obtain_number_synsets(row[3]))#Está en el _3 de las features
         #obtain frequency of occurrence of the token
         if row[3] in dictionary_frequency_words.keys():
             features.append(int(dictionary_frequency_words[row[3]]))
@@ -86,4 +115,4 @@ def obtain_features(path_to_file, file_to_save):
     print(x_train)
     print(y_train)
     return x_train, y_train
-obtain_features("lcp_single_test.tsv", "test_features")
+obtain_features("lcp_single_test.tsv", "test_features_3")
